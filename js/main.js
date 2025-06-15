@@ -5,6 +5,18 @@ const config = {
     baseUrl: 'https://kgvgh0615.github.io/my-thoughts' // Add base URL for GitHub Pages
 };
 
+// Function to get GitHub token
+function getGitHubToken() {
+    let token = localStorage.getItem('github_token');
+    if (!token) {
+        token = prompt('Please enter your GitHub Personal Access Token:');
+        if (token) {
+            localStorage.setItem('github_token', token);
+        }
+    }
+    return token;
+}
+
 // Function to format date and time for filename
 function formatDateTimeForFilename(date) {
     const pad = (num) => String(num).padStart(2, '0');
@@ -118,23 +130,16 @@ async function saveThought(event) {
             thoughtsGrid.innerHTML = '<p class="loading-message">Saving your thought...</p>';
         }
 
-        // Create a GitHub repository dispatch event
-        const response = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/dispatches`, {
+        // Send thought to our API endpoint
+        const response = await fetch('/api/thoughts', {
             method: 'POST',
             headers: {
-                'Accept': 'application/vnd.github.v3+json',
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                event_type: 'new_thought',
-                client_payload: {
-                    thought
-                }
-            })
+            body: JSON.stringify(thought)
         });
 
-        // 204 No Content is a success response for this endpoint
-        if (response.ok || response.status === 204) {
+        if (response.ok) {
             // Clear the form
             event.target.reset();
             // Show success message
