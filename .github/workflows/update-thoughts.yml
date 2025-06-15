@@ -1,0 +1,42 @@
+name: Update Thoughts
+
+on:
+  repository_dispatch:
+    types: [new_thought]
+
+jobs:
+  update-thoughts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+          
+      - name: Install dependencies
+        run: npm install
+        
+      - name: Process new thought
+        env:
+          GITHUB_TOKEN: ${{ secrets.THOUGHTS_TOKEN }}
+        run: |
+          # Create thoughts directory if it doesn't exist
+          mkdir -p thoughts
+          
+          # Create or update index.json
+          if [ ! -f thoughts/index.json ]; then
+            echo "[]" > thoughts/index.json
+          fi
+          
+          # Add new thought to index.json
+          node scripts/process-thought.js
+          
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          git commit -m "Add new thought" || exit 0
+          git push 

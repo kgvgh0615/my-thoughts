@@ -14,19 +14,29 @@
         <nav>
             <div class="nav-container">
                 <a href="/" class="logo">My Thoughts</a>
-                <div class="nav-links">
-                    <a href="/" class="active">Home</a>
-                    <a href="/archive.html">Archive</a>
-                    <a href="/about.html">About</a>
-                </div>
             </div>
         </nav>
     </header>
 
     <main>
         <div class="container">
+            <section class="new-thought">
+                <h2>New Thought</h2>
+                <form id="thoughtForm">
+                    <div class="form-group">
+                        <label for="thoughtTitle">Title</label>
+                        <input type="text" id="thoughtTitle" name="title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="thoughtContent">Your Thought</label>
+                        <textarea id="thoughtContent" name="content" rows="6" required></textarea>
+                    </div>
+                    <button type="submit" class="submit-btn">Save Thought</button>
+                </form>
+            </section>
+
             <section class="thoughts-list">
-                <h1>Recent Thoughts</h1>
+                <h2>Recent Thoughts</h2>
                 <div class="thoughts-grid">
                     <!-- Thought cards will be dynamically added here -->
                 </div>

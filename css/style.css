@@ -1,10 +1,11 @@
+/* Base styles */
 :root {
-    --primary-color: #333;
-    --secondary-color: #666;
+    --primary-color: #2563eb;
+    --text-color: #1f2937;
     --background-color: #ffffff;
-    --accent-color: #007AFF;
-    --border-color: #eee;
-    --hover-color: #f5f5f5;
+    --secondary-background: #f3f4f6;
+    --border-color: #e5e7eb;
+    --spacing-unit: 1rem;
 }
 
 * {
@@ -16,79 +17,139 @@
 body {
     font-family: 'Inter', sans-serif;
     line-height: 1.6;
-    color: var(--primary-color);
+    color: var(--text-color);
     background-color: var(--background-color);
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 800px;
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0 var(--spacing-unit);
 }
 
-/* Header & Navigation */
+/* Header styles */
 header {
-    border-bottom: 1px solid var(--border-color);
     background-color: var(--background-color);
-    position: sticky;
-    top: 0;
-    z-index: 100;
+    border-bottom: 1px solid var(--border-color);
+    padding: var(--spacing-unit) 0;
 }
 
 .nav-container {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 0;
 }
 
 .logo {
     font-size: 1.5rem;
     font-weight: 600;
-    color: var(--primary-color);
+    color: var(--text-color);
     text-decoration: none;
 }
 
-.nav-links {
-    display: flex;
-    gap: 2rem;
-}
-
-.nav-links a {
-    color: var(--secondary-color);
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.2s ease;
-}
-
-.nav-links a:hover,
-.nav-links a.active {
-    color: var(--accent-color);
-}
-
-/* Main Content */
+/* Main content styles */
 main {
-    padding: 2rem 0;
+    padding: calc(var(--spacing-unit) * 2) 0;
 }
 
-.thoughts-list h1 {
-    margin-bottom: 2rem;
-    font-size: 2rem;
-    font-weight: 600;
+/* New thought form styles */
+.new-thought {
+    background-color: var(--secondary-background);
+    padding: calc(var(--spacing-unit) * 1.5);
+    border-radius: 8px;
+    margin-bottom: calc(var(--spacing-unit) * 2);
+}
+
+.form-group {
+    margin-bottom: var(--spacing-unit);
+}
+
+label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+input[type="text"],
+textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 1rem;
+}
+
+textarea {
+    resize: vertical;
+    min-height: 150px;
+}
+
+.submit-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.submit-btn:hover {
+    background-color: #1d4ed8;
+}
+
+/* Thoughts list styles */
+.thoughts-list {
+    margin-top: calc(var(--spacing-unit) * 2);
 }
 
 .thoughts-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 2rem;
+    gap: var(--spacing-unit);
 }
 
-/* Footer */
+.thought-card {
+    background-color: var(--secondary-background);
+    padding: var(--spacing-unit);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.thought-card h3 {
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+}
+
+.thought-card time {
+    display: block;
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-bottom: 0.5rem;
+}
+
+.thought-card p {
+    margin-bottom: 1rem;
+}
+
+.read-more {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.read-more:hover {
+    text-decoration: underline;
+}
+
+/* Footer styles */
 footer {
     border-top: 1px solid var(--border-color);
-    padding: 2rem 0;
-    margin-top: 4rem;
-    color: var(--secondary-color);
+    padding: var(--spacing-unit) 0;
+    text-align: center;
+    color: #6b7280;
+    font-size: 0.875rem;
 }
 
 /* Responsive Design */

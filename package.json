@@ -1,0 +1,12 @@
+{
+  "name": "my-thoughts",
+  "version": "1.0.0",
+  "description": "A personal thoughts journal",
+  "main": "scripts/process-thought.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@octokit/rest": "^18.0.0"
+  }
+} 
