@@ -52,17 +52,31 @@
                 if (!response.ok) throw new Error('Thought not found');
                 
                 const content = await response.text();
-                const [frontMatter, ...bodyParts] = content.split('---');
-                const body = bodyParts.join('---').trim();
+                // Correctly parse the file into front matter and body
+                const parts = content.split('---');
+                if (parts.length < 3) {
+                    throw new Error("Invalid file format: missing front matter");
+                }
+                const frontMatter = parts[1];
+                const body = parts.slice(2).join('---').trim();
                 
                 // Parse front matter
                 const metadata = {};
-                frontMatter.split('\n').forEach(line => {
+                frontMatter.trim().split('\n').forEach(line => {
                     const [key, ...valueParts] = line.split(':');
                     if (key && valueParts.length) {
-                        metadata[key.trim()] = valueParts.join(':').trim();
+                        let value = valueParts.join(':').trim();
+                        // Remove quotes if they exist, which can cause date parsing errors
+                        if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+                            value = value.substring(1, value.length - 1);
+                        }
+                        metadata[key.trim()] = value;
                     }
                 });
+
+                if (!metadata.title || !metadata.date) {
+                    throw new Error("Missing title or date in front matter");
+                }
 
                 // Update page content
                 document.title = `${metadata.title} - My Thoughts`;
