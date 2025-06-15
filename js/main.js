@@ -5,6 +5,21 @@ const config = {
     baseUrl: 'https://kgvgh0615.github.io/my-thoughts'
 };
 
+// Function to get GitHub token
+function getGitHubToken() {
+    let token = localStorage.getItem('github_token');
+    if (!token) {
+        token = prompt(
+            'Please enter your GitHub Personal Access Token with "repo" scope.\n\n' +
+            'You can create one here: https://github.com/settings/tokens/new?scopes=repo'
+        );
+        if (token) {
+            localStorage.setItem('github_token', token);
+        }
+    }
+    return token;
+}
+
 // Function to format date and time for filename
 function formatDateTimeForFilename(date) {
     const pad = (num) => String(num).padStart(2, '0');
@@ -104,26 +119,46 @@ async function saveThought(event) {
     const now = new Date();
     const filename = `${formatDateTimeForFilename(now)}.md`;
     
-    const thoughtContent = `---
-date: ${now.toISOString()}
-title: ${title}
----
+    const thought = { title, content, date: now.toISOString(), filename };
 
-${content}
-`;
+    const token = getGitHubToken();
+    if (!token) {
+        alert('GitHub token is required to save thoughts.');
+        return;
+    }
 
-    const newFileUrl = new URL(`https://github.com/${config.owner}/${config.repo}/new/main`);
-    newFileUrl.searchParams.set('filename', `thoughts/${filename}`);
-    newFileUrl.searchParams.set('value', thoughtContent);
+    try {
+        const thoughtsGrid = document.querySelector('.thoughts-grid');
+        if (thoughtsGrid) {
+            thoughtsGrid.innerHTML = '<p class="loading-message">Saving your thought...</p>';
+        }
 
-    window.open(newFileUrl.toString(), '_blank');
-    
-    alert('Please complete saving your thought on GitHub. The page will refresh to show your new thought in a moment.');
-    
-    event.target.reset();
+        const response = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/dispatches`, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/vnd.github.v3+json',
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                event_type: 'new_thought',
+                client_payload: thought
+            })
+        });
 
-    // Reload thoughts after a short delay to allow GitHub to process the new file
-    setTimeout(loadThoughts, 8000);
+        if (response.ok || response.status === 204) {
+            event.target.reset();
+            alert('Thought saved successfully! It may take a few moments to appear.');
+            setTimeout(loadThoughts, 8000);
+        } else {
+            const error = await response.json().catch(() => ({ message: 'Unknown error' }));
+            throw new Error(error.message || 'Failed to save thought.');
+        }
+    } catch (error) {
+        console.error('Error saving thought:', error);
+        alert(`Error saving thought: ${error.message}`);
+        loadThoughts(); // Restore the thoughts list
+    }
 }
 
 // Initialize on page load

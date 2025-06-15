@@ -1,27 +1,51 @@
-name: Build Site
+name: New Thought Workflow
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'thoughts/**.md'
-      - '.github/workflows/build-site.yml'
+  repository_dispatch:
+    types: [new_thought]
 
 permissions:
   contents: write
 
 jobs:
-  build:
+  process-new-thought:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+            # We need a token with write permissions to push back to the repo
+            token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '16'
+
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
+      - name: Create new thought file
+        run: |
+          # Extract data from the event payload
+          TITLE=$(jq -r '.client_payload.title' "$GITHUB_EVENT_PATH")
+          CONTENT=$(jq -r '.client_payload.content' "$GITHUB_EVENT_PATH")
+          DATE=$(jq -r '.client_payload.date' "$GITHUB_EVENT_PATH")
+          FILENAME=$(jq -r '.client_payload.filename' "$GITHUB_EVENT_PATH")
+
+          # Create the markdown file content
+          thought_content=$(cat <<EOF
+---
+date: "$DATE"
+title: "$TITLE"
+---
+
+$CONTENT
+EOF
+          )
+          # Write the new thought file
+          echo "$thought_content" > "thoughts/$FILENAME"
+          echo "Created new thought file: thoughts/$FILENAME"
       
       - name: Install dependencies
         run: npm install
@@ -49,6 +73,6 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "build: update thoughts index and html files"
+            git commit -m "feat: add new thought - '$TITLE'"
             git push
           fi 
