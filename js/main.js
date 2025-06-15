@@ -2,7 +2,6 @@
 const config = {
     owner: 'kgvgh0615',
     repo: 'my-thoughts',
-    token: '', // This will be set by the user
     baseUrl: 'https://kgvgh0615.github.io/my-thoughts' // Add base URL for GitHub Pages
 };
 
@@ -100,16 +99,6 @@ async function loadThoughts(retryCount = 0) {
 async function saveThought(event) {
     event.preventDefault();
     
-    if (!config.token) {
-        const token = prompt('Please enter your GitHub token:');
-        if (!token) {
-            alert('A GitHub token is required to save thoughts.');
-            return;
-        }
-        config.token = token;
-        localStorage.setItem('github_token', token);
-    }
-    
     const title = document.getElementById('thoughtTitle').value;
     const content = document.getElementById('thoughtContent').value;
     const now = new Date();
@@ -134,7 +123,6 @@ async function saveThought(event) {
             method: 'POST',
             headers: {
                 'Accept': 'application/vnd.github.v3+json',
-                'Authorization': `token ${config.token}`,
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
@@ -173,12 +161,8 @@ async function saveThought(event) {
     }
 }
 
-// Load token from localStorage on page load
+// Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
-    const savedToken = localStorage.getItem('github_token');
-    if (savedToken) {
-        config.token = savedToken;
-    }
     loadThoughts();
     
     // Add form submission handler
