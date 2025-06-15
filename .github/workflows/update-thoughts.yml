@@ -49,6 +49,16 @@ jobs:
           echo "Processing new thought..."
           node scripts/process-thought.js
           
+          # Create HTML files for all thoughts
+          echo "Creating HTML files for thoughts..."
+          for md_file in thoughts/*.md; do
+            if [ -f "$md_file" ]; then
+              html_file="${md_file%.md}.html"
+              cp thought.html "$html_file"
+              echo "Created HTML file: $html_file"
+            fi
+          done
+          
           # Verify the index.json was updated
           echo "Verifying index.json..."
           cat thoughts/index.json
@@ -60,6 +70,6 @@ jobs:
           git config --local user.name "GitHub Action"
           git add .
           git status
-          git commit -m "Add new thought" || exit 0
+          git commit -m "Add new thought and generate HTML files" || exit 0
           git push
           echo "Changes committed and pushed" 

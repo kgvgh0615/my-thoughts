@@ -2,7 +2,7 @@
 const config = {
     owner: 'kgvgh0615',
     repo: 'my-thoughts',
-    token: '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', // This will be set by the user
+    token: '', // This will be set by the user
     baseUrl: 'https://kgvgh0615.github.io/my-thoughts' // Add base URL for GitHub Pages
 };
 
@@ -30,12 +30,13 @@ function createThoughtCard(thought) {
     console.log('Creating card for thought:', thought);
     // Ensure the filename is properly formatted
     const filename = thought.filename || `${formatDateTimeForFilename(new Date(thought.date))}.md`;
+    const htmlFilename = filename.replace('.md', '.html');
     return `
         <article class="thought-card">
             <h3>${thought.title}</h3>
             <time datetime="${thought.date}">${formatDateForDisplay(thought.date)}</time>
             <p>${thought.preview || thought.content.substring(0, 150)}...</p>
-            <a href="${config.baseUrl}/thoughts/${filename}" class="read-more" target="_blank">Read more</a>
+            <a href="${config.baseUrl}/thoughts/${htmlFilename}" class="read-more" target="_blank">Read more</a>
         </article>
     `;
 }
