@@ -104,6 +104,12 @@ async function saveThought(event) {
     };
 
     try {
+        // Show loading state
+        const thoughtsGrid = document.querySelector('.thoughts-grid');
+        if (thoughtsGrid) {
+            thoughtsGrid.innerHTML = '<p class="loading-message">Saving your thought...</p>';
+        }
+
         // Create a GitHub repository dispatch event
         const response = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/dispatches`, {
             method: 'POST',
@@ -120,21 +126,31 @@ async function saveThought(event) {
             })
         });
 
-        if (response.ok) {
+        // 204 No Content is a success response for this endpoint
+        if (response.ok || response.status === 204) {
             // Clear the form
             event.target.reset();
             // Show success message
-            alert('Thought saved successfully!');
+            alert('Thought saved successfully! It may take a few moments to appear.');
             // Reload thoughts after a short delay to allow GitHub Actions to complete
             setTimeout(loadThoughts, 2000);
         } else {
-            const error = await response.json();
+            const error = await response.json().catch(() => ({ message: 'Unknown error' }));
             console.error('Error saving thought:', error);
-            alert('Error saving thought. Please check the console for details.');
+            alert(`Error saving thought: ${error.message || 'Please check the console for details.'}`);
+            // Reset loading state
+            if (thoughtsGrid) {
+                loadThoughts();
+            }
         }
     } catch (error) {
         console.error('Error:', error);
         alert('Error saving thought. Please check the console for details.');
+        // Reset loading state
+        const thoughtsGrid = document.querySelector('.thoughts-grid');
+        if (thoughtsGrid) {
+            loadThoughts();
+        }
     }
 }
 
