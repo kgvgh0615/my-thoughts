@@ -17,7 +17,7 @@ function createThoughtCard(thought) {
             <h2>${thought.title}</h2>
             <time datetime="${thought.date}">${formatDate(thought.date)}</time>
             <p>${thought.preview}</p>
-            <a href="/thoughts/${thought.id}.html" class="read-more">Read more</a>
+            <a href="thoughts/${thought.id}.html" class="read-more">Read more</a>
         </article>
     `;
 }
