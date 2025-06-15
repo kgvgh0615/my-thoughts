@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-// Mock fs and path
+// Mock fs and path modules
 jest.mock('fs');
 jest.mock('path');
 
@@ -10,10 +10,10 @@ describe('Process Thought Script', () => {
         // Reset all mocks
         jest.clearAllMocks();
         
-        // Mock environment
-        process.env.GITHUB_EVENT_PATH = '/tmp/event.json';
+        // Mock environment variable
+        process.env.GITHUB_EVENT_PATH = '/path/to/event.json';
         
-        // Mock path.join
+        // Mock path.join to return predictable paths
         path.join.mockImplementation((...args) => args.join('/'));
     });
 
@@ -21,28 +21,28 @@ describe('Process Thought Script', () => {
         // Mock event data
         const eventData = {
             client_payload: {
-                thought: {
-                    title: 'Test Thought',
-                    content: 'Test Content',
-                    date: '2024-03-21T12:00:00.000Z',
-                    filename: 'test.md'
-                }
+                title: 'Test Thought',
+                content: 'Test Content',
+                date: '2024-02-20T12:00:00Z'
             }
         };
-
-        // Mock fs.readFileSync
-        fs.readFileSync.mockReturnValue(JSON.stringify(eventData));
-
-        // Mock fs.existsSync
-        fs.existsSync.mockReturnValue(false);
-
+        
+        // Mock fs.readFileSync to return event data
+        fs.readFileSync.mockReturnValueOnce(JSON.stringify(eventData));
+        
+        // Mock fs.existsSync to return false for new file
+        fs.existsSync.mockReturnValueOnce(false);
+        
+        // Mock fs.writeFileSync
+        fs.writeFileSync.mockImplementation(() => {});
+        
         // Run the script
-        require('../scripts/process-thought.js');
-
+        require('../scripts/process-thought');
+        
         // Verify file creation
         expect(fs.writeFileSync).toHaveBeenCalledWith(
-            'thoughts/test.md',
-            expect.stringContaining('Test Thought')
+            expect.stringContaining('2024-02-20-test-thought.md'),
+            expect.stringContaining('# Test Thought')
         );
     });
 
@@ -50,69 +50,65 @@ describe('Process Thought Script', () => {
         // Mock event data
         const eventData = {
             client_payload: {
-                thought: {
-                    title: 'Test Thought',
-                    content: 'Test Content',
-                    date: '2024-03-21T12:00:00.000Z',
-                    filename: 'test.md'
-                }
+                title: 'Test Thought',
+                content: 'Test Content',
+                date: '2024-02-20T12:00:00Z'
             }
         };
-
+        
         // Mock existing index.json
-        const existingIndex = [];
-        fs.readFileSync.mockImplementation((path) => {
-            if (path === '/tmp/event.json') {
-                return JSON.stringify(eventData);
+        const existingIndex = [
+            {
+                title: 'Old Thought',
+                filename: '2024-02-19-old-thought.md',
+                preview: 'Old Content'
             }
-            return JSON.stringify(existingIndex);
-        });
-
-        fs.existsSync.mockReturnValue(true);
-
+        ];
+        
+        // Mock fs.readFileSync to return event data and existing index
+        fs.readFileSync
+            .mockReturnValueOnce(JSON.stringify(eventData))
+            .mockReturnValueOnce(JSON.stringify(existingIndex));
+        
+        // Mock fs.existsSync to return true for index.json
+        fs.existsSync.mockReturnValueOnce(true);
+        
+        // Mock fs.writeFileSync
+        fs.writeFileSync.mockImplementation(() => {});
+        
         // Run the script
-        require('../scripts/process-thought.js');
-
+        require('../scripts/process-thought');
+        
         // Verify index.json update
         expect(fs.writeFileSync).toHaveBeenCalledWith(
-            'thoughts/index.json',
+            expect.stringContaining('index.json'),
             expect.stringContaining('Test Thought')
         );
     });
 
     it('should handle missing event data', () => {
         // Mock empty event data
-        fs.readFileSync.mockReturnValue('{}');
-
+        fs.readFileSync.mockReturnValueOnce('{}');
+        
         // Run the script
-        require('../scripts/process-thought.js');
-
+        require('../scripts/process-thought');
+        
         // Verify error handling
         expect(process.exit).toHaveBeenCalledWith(1);
+        expect(console.error).toHaveBeenCalled();
     });
 
     it('should handle file system errors', () => {
-        // Mock event data
-        const eventData = {
-            client_payload: {
-                thought: {
-                    title: 'Test Thought',
-                    content: 'Test Content',
-                    date: '2024-03-21T12:00:00.000Z',
-                    filename: 'test.md'
-                }
-            }
-        };
-
         // Mock fs.readFileSync to throw error
         fs.readFileSync.mockImplementation(() => {
             throw new Error('File system error');
         });
-
+        
         // Run the script
-        require('../scripts/process-thought.js');
-
+        require('../scripts/process-thought');
+        
         // Verify error handling
         expect(process.exit).toHaveBeenCalledWith(1);
+        expect(console.error).toHaveBeenCalled();
     });
 }); 

@@ -2,7 +2,8 @@
 const config = {
     owner: 'kgvgh0615',
     repo: 'my-thoughts',
-    token: '' // This will be set by the user
+    token: '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', // This will be set by the user
+    baseUrl: 'https://kgvgh0615.github.io/my-thoughts' // Add base URL for GitHub Pages
 };
 
 // Function to format date and time for filename
@@ -27,12 +28,14 @@ function formatDateForDisplay(dateString) {
 // Function to create a thought card
 function createThoughtCard(thought) {
     console.log('Creating card for thought:', thought);
+    // Ensure the filename is properly formatted
+    const filename = thought.filename || `${formatDateTimeForFilename(new Date(thought.date))}.md`;
     return `
         <article class="thought-card">
             <h3>${thought.title}</h3>
             <time datetime="${thought.date}">${formatDateForDisplay(thought.date)}</time>
-            <p>${thought.preview}</p>
-            <a href="./thoughts/${thought.filename}" class="read-more">Read more</a>
+            <p>${thought.preview || thought.content.substring(0, 150)}...</p>
+            <a href="${config.baseUrl}/thoughts/${filename}" class="read-more" target="_blank">Read more</a>
         </article>
     `;
 }
@@ -41,7 +44,7 @@ function createThoughtCard(thought) {
 async function loadThoughts(retryCount = 0) {
     try {
         console.log('Loading thoughts...');
-        const response = await fetch('./thoughts/index.json');
+        const response = await fetch(`${config.baseUrl}/thoughts/index.json`);
         console.log('Response status:', response.status);
         
         if (!response.ok) {

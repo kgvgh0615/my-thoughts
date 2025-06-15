@@ -17,6 +17,12 @@ global.console = {
     info: jest.fn()
 };
 
+// Mock process.exit
+process.exit = jest.fn();
+
+// Mock prompt
+global.prompt = jest.fn();
+
 // Reset all mocks before each test
 beforeEach(() => {
     localStorageMock.getItem.mockClear();
@@ -26,6 +32,8 @@ beforeEach(() => {
     global.console.error.mockClear();
     global.console.warn.mockClear();
     global.console.info.mockClear();
+    process.exit.mockClear();
+    global.prompt.mockClear();
     
     // Reset DOM
     document.body.innerHTML = `
