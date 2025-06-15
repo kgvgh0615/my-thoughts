@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thought - My Thoughts</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="nav-container">
+                <a href="../" class="logo">My Thoughts</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="container">
+            <article class="thought-content">
+                <h1 id="thought-title"></h1>
+                <time id="thought-date"></time>
+                <div id="thought-body"></div>
+            </article>
+
+            <section class="comments-section">
+                <h2>Comments</h2>
+                <div id="comments-container"></div>
+                <a href="#" id="comment-link" class="submit-btn">Add a Comment</a>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 My Thoughts. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="../js/comments.js"></script>
+    <script>
+        // Load and display the thought content
+        async function loadThought() {
+            const thoughtId = window.location.pathname.split('/').pop().replace('.html', '');
+            try {
+                const response = await fetch(`../thoughts/${thoughtId}.md`);
+                if (!response.ok) throw new Error('Thought not found');
+                
+                const content = await response.text();
+                const [frontMatter, ...bodyParts] = content.split('---');
+                const body = bodyParts.join('---').trim();
+                
+                // Parse front matter
+                const metadata = {};
+                frontMatter.split('\n').forEach(line => {
+                    const [key, ...valueParts] = line.split(':');
+                    if (key && valueParts.length) {
+                        metadata[key.trim()] = valueParts.join(':').trim();
+                    }
+                });
+
+                // Update page content
+                document.title = `${metadata.title} - My Thoughts`;
+                document.getElementById('thought-title').textContent = metadata.title;
+                document.getElementById('thought-date').textContent = new Date(metadata.date).toLocaleDateString(undefined, {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                document.getElementById('thought-body').innerHTML = marked.parse(body);
+            } catch (error) {
+                console.error('Error loading thought:', error);
+                document.querySelector('.thought-content').innerHTML = '<p class="error-message">Error loading thought. Please try again later.</p>';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadThought);
+    </script>
+</body>
+</html> 
