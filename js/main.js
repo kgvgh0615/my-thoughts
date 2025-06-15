@@ -1,14 +1,9 @@
-// Sample thoughts data - In a real implementation, this would come from markdown files
-const thoughts = [
-    {
-        id: 1,
-        title: "First Thought",
-        date: "2024-03-20",
-        preview: "This is a preview of my first thought...",
-        content: "This is the full content of my first thought..."
-    },
-    // More thoughts will be added here
-];
+// Configuration
+const config = {
+    owner: 'kgvgh0615',
+    repo: 'my-thoughts',
+    token: '' // This will be set by the user
+};
 
 // Function to format date and time for filename
 function formatDateTimeForFilename(date) {
@@ -45,22 +40,43 @@ function createThoughtCard(thought) {
 async function loadThoughts() {
     try {
         const response = await fetch('./thoughts/index.json');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const thoughts = await response.json();
         const thoughtsGrid = document.querySelector('.thoughts-grid');
         
         if (thoughtsGrid) {
-            // Sort thoughts by date (newest first)
-            thoughts.sort((a, b) => new Date(b.date) - new Date(a.date));
-            thoughtsGrid.innerHTML = thoughts.map(thought => createThoughtCard(thought)).join('');
+            if (thoughts.length === 0) {
+                thoughtsGrid.innerHTML = '<p class="no-thoughts">No thoughts yet. Be the first to share your thoughts!</p>';
+            } else {
+                // Sort thoughts by date (newest first)
+                thoughts.sort((a, b) => new Date(b.date) - new Date(a.date));
+                thoughtsGrid.innerHTML = thoughts.map(thought => createThoughtCard(thought)).join('');
+            }
         }
     } catch (error) {
         console.error('Error loading thoughts:', error);
+        const thoughtsGrid = document.querySelector('.thoughts-grid');
+        if (thoughtsGrid) {
+            thoughtsGrid.innerHTML = '<p class="error-message">Error loading thoughts. Please try again later.</p>';
+        }
     }
 }
 
 // Function to save a new thought
 async function saveThought(event) {
     event.preventDefault();
+    
+    if (!config.token) {
+        const token = prompt('Please enter your GitHub token:');
+        if (!token) {
+            alert('A GitHub token is required to save thoughts.');
+            return;
+        }
+        config.token = token;
+        localStorage.setItem('github_token', token);
+    }
     
     const title = document.getElementById('thoughtTitle').value;
     const content = document.getElementById('thoughtContent').value;
@@ -76,11 +92,11 @@ async function saveThought(event) {
 
     try {
         // Create a GitHub repository dispatch event
-        const response = await fetch('https://api.github.com/repos/kgvgh0615/my-thoughts/dispatches', {
+        const response = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/dispatches`, {
             method: 'POST',
             headers: {
                 'Accept': 'application/vnd.github.v3+json',
-                'Authorization': `token ${process.env.THOUGHTS_TOKEN}`,
+                'Authorization': `token ${config.token}`,
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
@@ -94,18 +110,27 @@ async function saveThought(event) {
         if (response.ok) {
             // Clear the form
             event.target.reset();
+            // Show success message
+            alert('Thought saved successfully!');
             // Reload thoughts after a short delay to allow GitHub Actions to complete
             setTimeout(loadThoughts, 2000);
         } else {
-            console.error('Error saving thought');
+            const error = await response.json();
+            console.error('Error saving thought:', error);
+            alert('Error saving thought. Please check the console for details.');
         }
     } catch (error) {
         console.error('Error:', error);
+        alert('Error saving thought. Please check the console for details.');
     }
 }
 
-// Initialize the page
+// Load token from localStorage on page load
 document.addEventListener('DOMContentLoaded', () => {
+    const savedToken = localStorage.getItem('github_token');
+    if (savedToken) {
+        config.token = savedToken;
+    }
     loadThoughts();
     
     // Add form submission handler

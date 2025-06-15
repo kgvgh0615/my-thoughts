@@ -152,6 +152,34 @@ footer {
     font-size: 0.875rem;
 }
 
+/* Error and empty states */
+.error-message,
+.no-thoughts {
+    text-align: center;
+    padding: 2rem;
+    background-color: var(--secondary-background);
+    border-radius: 8px;
+    color: #6b7280;
+}
+
+.error-message {
+    color: #dc2626;
+    background-color: #fee2e2;
+    border: 1px solid #fecaca;
+}
+
+/* Form validation styles */
+input:invalid,
+textarea:invalid {
+    border-color: #dc2626;
+}
+
+.error-feedback {
+    color: #dc2626;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .nav-container {
