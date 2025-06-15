@@ -1,0 +1,54 @@
+name: Build Site
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'thoughts/**.md'
+      - '.github/workflows/build-site.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+      
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build thoughts index
+        run: node scripts/build-index.js
+      
+      - name: Generate HTML files for thoughts
+        run: |
+          for md_file in thoughts/*.md; do
+            if [ -f "$md_file" ]; then
+              html_file="thoughts/$(basename "$md_file" .md).html"
+              if [ ! -f "$html_file" ]; then
+                cp thought.html "$html_file"
+                echo "Created HTML file: $html_file"
+              fi
+            fi
+          done
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add thoughts/index.json thoughts/*.html
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "build: update thoughts index and html files"
+            git push
+          fi 
