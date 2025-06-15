@@ -47,7 +47,8 @@
         async function loadThought() {
             const thoughtId = window.location.pathname.split('/').pop().replace('.html', '');
             try {
-                const response = await fetch(`../thoughts/${thoughtId}.md`);
+                // Fetch the markdown file from the same directory
+                const response = await fetch(`${thoughtId}.md?t=${new Date().getTime()}`);
                 if (!response.ok) throw new Error('Thought not found');
                 
                 const content = await response.text();
