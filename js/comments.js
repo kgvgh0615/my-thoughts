@@ -1,5 +1,5 @@
 // GitHub Issues API configuration
-const GITHUB_REPO = 'your-username/your-repo'; // Replace with your GitHub repo
+const GITHUB_REPO = 'kgvgh0615/my-thoughts'; // Replace with your GitHub repo
 const GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/issues`;
 
 // Function to load comments
