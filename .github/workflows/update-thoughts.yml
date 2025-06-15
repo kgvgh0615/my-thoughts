@@ -22,21 +22,35 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.THOUGHTS_TOKEN }}
         run: |
+          echo "Starting thought processing..."
+          
           # Create thoughts directory if it doesn't exist
           mkdir -p thoughts
+          echo "Created thoughts directory"
           
           # Create or update index.json
           if [ ! -f thoughts/index.json ]; then
             echo "[]" > thoughts/index.json
+            echo "Created new index.json"
+          else
+            echo "Found existing index.json"
           fi
           
           # Add new thought to index.json
+          echo "Processing new thought..."
           node scripts/process-thought.js
+          
+          # Verify the index.json was updated
+          echo "Verifying index.json..."
+          cat thoughts/index.json
           
       - name: Commit and push changes
         run: |
+          echo "Committing changes..."
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add .
+          git status
           git commit -m "Add new thought" || exit 0
-          git push 
+          git push
+          echo "Changes committed and pushed" 

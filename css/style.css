@@ -180,6 +180,22 @@ textarea:invalid {
     margin-top: 0.25rem;
 }
 
+/* Loading state */
+.loading-message {
+    text-align: center;
+    padding: 2rem;
+    background-color: var(--secondary-background);
+    border-radius: 8px;
+    color: #6b7280;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .nav-container {
