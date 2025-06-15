@@ -2,19 +2,55 @@
 const config = {
     owner: 'kgvgh0615',
     repo: 'my-thoughts',
-    baseUrl: 'https://kgvgh0615.github.io/my-thoughts' // Add base URL for GitHub Pages
+    baseUrl: 'https://kgvgh0615.github.io/my-thoughts',
+    clientId: 'Ov23liguYVzezGC0MSxT' // You'll need to create this
 };
 
 // Function to get GitHub token
-function getGitHubToken() {
-    let token = localStorage.getItem('github_token');
+async function getGitHubToken() {
+    // Check if we have a token in session storage
+    let token = sessionStorage.getItem('github_token');
+    
     if (!token) {
-        token = prompt('Please enter your GitHub Personal Access Token:');
-        if (token) {
-            localStorage.setItem('github_token', token);
+        // Check if we're returning from GitHub OAuth
+        const code = new URLSearchParams(window.location.search).get('code');
+        if (code) {
+            try {
+                // Exchange code for token
+                const response = await fetch('https://github.com/login/oauth/access_token', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        client_id: config.clientId,
+                        code: code
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.access_token) {
+                    token = data.access_token;
+                    sessionStorage.setItem('github_token', token);
+                    // Remove code from URL
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+            } catch (error) {
+                console.error('Error getting token:', error);
+            }
         }
     }
+    
     return token;
+}
+
+// Function to initiate GitHub OAuth
+function initiateGitHubLogin() {
+    const scope = 'repo';
+    const redirectUri = window.location.origin + window.location.pathname;
+    const url = `https://github.com/login/oauth/authorize?client_id=${config.clientId}&scope=${scope}&redirect_uri=${redirectUri}`;
+    window.location.href = url;
 }
 
 // Function to format date and time for filename
@@ -130,16 +166,29 @@ async function saveThought(event) {
             thoughtsGrid.innerHTML = '<p class="loading-message">Saving your thought...</p>';
         }
 
-        // Send thought to our API endpoint
-        const response = await fetch('/api/thoughts', {
+        // Get GitHub token
+        const token = await getGitHubToken();
+        if (!token) {
+            // If no token, initiate GitHub login
+            initiateGitHubLogin();
+            return;
+        }
+
+        // Create a GitHub repository dispatch event
+        const response = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/dispatches`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Accept': 'application/vnd.github.v3+json',
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify(thought)
+            body: JSON.stringify({
+                event_type: 'create_thought',
+                client_payload: thought
+            })
         });
 
-        if (response.ok) {
+        if (response.ok || response.status === 204) {
             // Clear the form
             event.target.reset();
             // Show success message
@@ -167,12 +216,27 @@ async function saveThought(event) {
 }
 
 // Initialize on page load
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     loadThoughts();
     
     // Add form submission handler
     const thoughtForm = document.getElementById('thoughtForm');
     if (thoughtForm) {
         thoughtForm.addEventListener('submit', saveThought);
+    }
+
+    // Check if we have a token
+    const token = await getGitHubToken();
+    if (!token) {
+        // Show login button
+        const form = document.querySelector('.new-thought');
+        if (form) {
+            const loginButton = document.createElement('button');
+            loginButton.type = 'button';
+            loginButton.className = 'submit-btn';
+            loginButton.textContent = 'Login with GitHub to Post';
+            loginButton.onclick = initiateGitHubLogin;
+            form.insertBefore(loginButton, form.firstChild);
+        }
     }
 }); 

@@ -1,0 +1,66 @@
+name: Create Thought
+
+on:
+  repository_dispatch:
+    types: [create_thought]
+
+jobs:
+  create-thought:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.THOUGHTS_TOKEN }}
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+          
+      - name: Create thought
+        env:
+          GITHUB_TOKEN: ${{ secrets.THOUGHTS_TOKEN }}
+        run: |
+          # Get the thought data from the event
+          THOUGHT_DATA=$(cat $GITHUB_EVENT_PATH | jq -r '.client_payload')
+          
+          # Extract thought details
+          TITLE=$(echo $THOUGHT_DATA | jq -r '.title')
+          CONTENT=$(echo $THOUGHT_DATA | jq -r '.content')
+          DATE=$(echo $THOUGHT_DATA | jq -r '.date')
+          FILENAME=$(echo $THOUGHT_DATA | jq -r '.filename')
+          
+          # Create the thought file
+          mkdir -p thoughts
+          cat > "thoughts/$FILENAME" << EOL
+          ---
+          date: $DATE
+          title: $TITLE
+          ---
+          
+          $CONTENT
+          EOL
+          
+          # Update index.json
+          if [ -f thoughts/index.json ]; then
+            # Read existing index
+            THOUGHTS=$(cat thoughts/index.json)
+          else
+            # Create new index
+            THOUGHTS="[]"
+          fi
+          
+          # Add new thought
+          NEW_THOUGHT="{\"title\":\"$TITLE\",\"date\":\"$DATE\",\"filename\":\"$FILENAME\",\"preview\":\"${CONTENT:0:150}...\"}"
+          THOUGHTS=$(echo $THOUGHTS | jq ". + [$NEW_THOUGHT] | sort_by(.date) | reverse")
+          
+          # Write updated index
+          echo $THOUGHTS > thoughts/index.json
+          
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          git commit -m "Add new thought" || exit 0
+          git push 
