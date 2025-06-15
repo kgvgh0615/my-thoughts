@@ -26,6 +26,7 @@ function formatDateForDisplay(dateString) {
 
 // Function to create a thought card
 function createThoughtCard(thought) {
+    console.log('Creating card for thought:', thought);
     return `
         <article class="thought-card">
             <h3>${thought.title}</h3>
@@ -39,35 +40,49 @@ function createThoughtCard(thought) {
 // Function to load thoughts with retry
 async function loadThoughts(retryCount = 0) {
     try {
+        console.log('Loading thoughts...');
         const response = await fetch('./thoughts/index.json');
+        console.log('Response status:', response.status);
+        
         if (!response.ok) {
             if (response.status === 404 && retryCount < 3) {
-                // If index.json doesn't exist yet, wait and retry
                 console.log(`Index not found, retrying in 2 seconds... (attempt ${retryCount + 1})`);
                 await new Promise(resolve => setTimeout(resolve, 2000));
                 return loadThoughts(retryCount + 1);
             }
             throw new Error(`HTTP error! status: ${response.status}`);
         }
+
         const thoughts = await response.json();
-        const thoughtsGrid = document.querySelector('.thoughts-grid');
+        console.log('Loaded thoughts:', thoughts);
         
+        const thoughtsGrid = document.querySelector('.thoughts-grid');
         if (thoughtsGrid) {
-            if (!Array.isArray(thoughts) || thoughts.length === 0) {
+            if (!Array.isArray(thoughts)) {
+                console.error('Thoughts is not an array:', thoughts);
+                thoughtsGrid.innerHTML = '<p class="error-message">Error: Invalid thoughts format</p>';
+                return;
+            }
+
+            if (thoughts.length === 0) {
+                console.log('No thoughts found');
                 thoughtsGrid.innerHTML = '<p class="no-thoughts">No thoughts yet. Be the first to share your thoughts!</p>';
             } else {
+                console.log('Rendering thoughts:', thoughts.length);
                 // Sort thoughts by date (newest first)
                 thoughts.sort((a, b) => new Date(b.date) - new Date(a.date));
                 thoughtsGrid.innerHTML = thoughts.map(thought => createThoughtCard(thought)).join('');
             }
+        } else {
+            console.error('Thoughts grid element not found');
         }
     } catch (error) {
         console.error('Error loading thoughts:', error);
         const thoughtsGrid = document.querySelector('.thoughts-grid');
         if (thoughtsGrid) {
             if (retryCount < 3) {
+                console.log(`Retrying in 2 seconds... (attempt ${retryCount + 1})`);
                 thoughtsGrid.innerHTML = '<p class="loading-message">Loading thoughts...</p>';
-                // Wait and retry
                 await new Promise(resolve => setTimeout(resolve, 2000));
                 return loadThoughts(retryCount + 1);
             } else {
